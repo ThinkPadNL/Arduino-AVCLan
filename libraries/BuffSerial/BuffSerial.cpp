@@ -4,7 +4,7 @@
   Version 0.1.2
 */
 #include <stdio.h>
-
+#include <avr/interrupt.h>
 #include "BuffSerial.h"
 
 // serial init

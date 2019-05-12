@@ -8,7 +8,7 @@
 #ifndef BuffSerial_h
 #define BuffSerial_h
 
-#include "WProgram.h"
+//#include "WProgram.h"
 
 #define TX_BUFF_SIZE		240               // max 65535 
 #define RX_BUFF_SIZE		25                // max 255
