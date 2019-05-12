@@ -8,12 +8,11 @@
 #define AVCLanCDch_h
 
 #include <avr/pgmspace.h>
-#include "AVCLanDrv.h"
-#include "WProgram.h"
+#include "../AVCLanDrv/AVCLanDrv.h"
 
 // timer1 overflow every 1 sec 
-#define TI1_H	(((word)-(F_CPU / 1024)) >> 8)
-#define TI1_L	(((word)-(F_CPU / 1024)) & 0xff )
+#define TI1_H	(((uint16_t)-(F_CPU / 1024)) >> 8)
+#define TI1_L	(((uint16_t)-(F_CPU / 1024)) & 0xff )
 
 #if defined(__AVR_ATmega8__)
 #define ENABLE_TIMER1_INT  (sbi(TIMSK, TOIE1));
@@ -26,8 +25,8 @@
 #define AVCLANDEVICE_NAME    " CD changer"
 #define AVCLANDEVICE_VERSION "0.2.2"
 
-extern AvcOutMessage CmdReset; // reset AVCLan. This causes HU to send ACT_REGISTER
-extern AvcOutMessage CmdRegister; // register CD changer
+extern const AvcOutMessage CmdReset; // reset AVCLan. This causes HU to send ACT_REGISTER
+extern const AvcOutMessage CmdRegister; // register CD changer
 // extern AvcOutMessage *CmdTest; // test message
 
 
@@ -85,17 +84,17 @@ typedef enum{
 
 class AVCLanCDch{
 	public:
-		byte		cd_min;                      // minutes play
-		byte		cd_sec;                      // seconds play
+		uint8_t		cd_min;                      // minutes play
+		uint8_t		cd_sec;                      // seconds play
 		cdStatus	cd_status;                   // cd changer status
-		byte		cd_playmode;                 // play mode (scan, random etc..)
+		uint8_t		cd_playmode;                 // play mode (scan, random etc..)
 		void		begin ();                    // initialisation, obligatory method
 		void		getActionID();               // get action id by recieved message, obligatory method
 		void		processAction(AvcActionID);  // process action, obligatory method
 		void		processEvent(AvcEventID);    // process event, obligatory method
-		byte		sendStatus();                // send CD-changer status to head
-		byte		hexInc(byte data);
-		byte		hexDec(byte data);
+		uint8_t		sendStatus();                // send CD-changer status to head
+		uint8_t		hexInc(uint8_t data);
+		uint8_t		hexDec(uint8_t data);
 };
 #endif
 

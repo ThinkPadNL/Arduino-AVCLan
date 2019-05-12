@@ -5,7 +5,8 @@
 */
 
 #include "AVCLanDrv.h"
-#include "BuffSerial.h"
+#include "../../src/BuffSerial/BuffSerial.h"
+#include <Arduino.h>
 
 // AVCLan driver & timer2 init, 
 void AVCLanDrv::begin (){
@@ -60,10 +61,10 @@ void AVCLanDrv::begin (){
 }
 
 // Reads specified number of bits from the AVCLan.
-// nbBits (byte) -> Number of bits to read.
-// Return (word) -> Data value read.
-word AVCLanDrv::readBits (byte nbBits){
-	word data  = 0;
+// nbBits (uint8_t) -> Number of bits to read.
+// Return (uint16_t) -> Data value read.
+uint16_t AVCLanDrv::readBits (uint8_t nbBits){
+	uint16_t data  = 0;
 	_parityBit = 0;
 	
 	while (nbBits-- > 0){
@@ -93,28 +94,20 @@ word AVCLanDrv::readBits (byte nbBits){
 
 // Read incoming messages on the AVCLan.
 // Return true if success.
-byte AVCLanDrv::_readMessage (){
+uint8_t AVCLanDrv::_readMessage (){
 	uint8_t t = 0;
 	uint8_t oldSREG = SREG;
 	cli();             // disable interrupts
 
 	// Start bit.
 	while (INPUT_IS_CLEAR);
-	TCCR2B=0x03;      // prescaler 32
 	TCNT2 = 0;
 	// Wait until falling edge.
 	while (INPUT_IS_SET){
 		t = TCNT2;
-		if (t > 0xFF) {
-			TCCR2B=0x02;      // prescaler 8
-			SREG = oldSREG;
-			return 1;
-		}
 	}
-	TCCR2B=0x02;      // prescaler 8
 	
 	if (t < AVC_START_BIT_HOLD_ON_MIN_LENGTH){
-	//if (t < 0x16){
 			SREG = oldSREG;
 			return 2;
 	}
@@ -182,13 +175,13 @@ byte AVCLanDrv::_readMessage (){
 		SREG = oldSREG;
 		return 7;
 	}
-	byte i;
+	uint8_t i;
 	for (i = 0; i < dataSize; i++ ){
 		message[i] = readBits(8);
 		p = _parityBit;
 		if (p != readBits(1)){
 			SREG = oldSREG;
-			return 8;
+	//		return 8;
 		}
 
 		if (forMe){
@@ -206,10 +199,10 @@ byte AVCLanDrv::_readMessage (){
 
 // Read incoming messages on the AVCLan, log message through serial port
 // Return true if success.
-byte AVCLanDrv::readMessage (){
-	byte res = avclan._readMessage();
+uint8_t AVCLanDrv::readMessage (){
+	uint8_t res = avclan._readMessage();
 	if (!res){
-		avclan.printMessage(true);
+//		avclan.printMessage(true);
 	}else{
 		bSerial.print("R");
 		bSerial.printHex4(res);
@@ -222,7 +215,6 @@ byte AVCLanDrv::readMessage (){
 // Send a start bit to the AVCLan
 void AVCLanDrv::sendStartBit (){
 	// Reset timer to measure bit length.
-	TCCR2B=0x03;      // prescaler 32
 	TCNT2 = 0;
 	OUTPUT_SET_1;
 
@@ -232,11 +224,10 @@ void AVCLanDrv::sendStartBit (){
 
 	// Pulse level low duration until ~185 us.
 	while ( TCNT2 < AVC_START_BIT_LENGTH );
-	TCCR2B=0x02;      // prescaler 8
 
 }
 
-// Send a 1 bit word to the AVCLan
+// Send a 1 bit uint16_t to the AVCLan
 void AVCLanDrv::send1BitWord (bool data){
 	// Reset timer to measure bit length.
 	TCNT2 = 0;
@@ -252,8 +243,8 @@ void AVCLanDrv::send1BitWord (bool data){
 	while (TCNT2 <  AVC_NORMAL_BIT_LENGTH);
 }
 
-// Send a 4 bit word to the AVCLan
-void AVCLanDrv::send4BitWord (byte data){
+// Send a 4 bit uint16_t to the AVCLan
+void AVCLanDrv::send4BitWord (uint8_t data){
 	_parityBit = 0;
 
 	// Most significant bit out first.   
@@ -279,8 +270,8 @@ void AVCLanDrv::send4BitWord (byte data){
 	}
 }
 
-// Send a 8 bit word to the AVCLan
-void AVCLanDrv::send8BitWord (byte data){
+// Send a 8 bit uint16_t to the AVCLan
+void AVCLanDrv::send8BitWord (uint8_t data){
 	_parityBit = 0;
 
 	// Most significant bit out first.   
@@ -306,8 +297,8 @@ void AVCLanDrv::send8BitWord (byte data){
 	}
 }
 
-// Send a 12 bit word to the AVCLan
-void AVCLanDrv::send12BitWord (word data){
+// Send a 12 bit uint16_t to the AVCLan
+void AVCLanDrv::send12BitWord (uint16_t data){
 	_parityBit = 0;
 
 	// Most significant bit out first.   
@@ -397,7 +388,7 @@ bool AVCLanDrv::handleAcknowledge (void){
 
 // sends the message in global registers on the AVC LAN bus.
 // return 0 if successful else error code
-byte AVCLanDrv::_sendMessage (void){  
+uint8_t AVCLanDrv::_sendMessage (void){  
 	uint8_t oldSREG = SREG;
 	cli();             // disable interrupts
 	while (!isAvcBusFree());
@@ -441,7 +432,7 @@ byte AVCLanDrv::_sendMessage (void){
 		return 3;
 	}
 
-	for (byte i = 0; i < dataSize; i++){
+	for (uint8_t i = 0; i < dataSize; i++){
 		send8BitWord(message[i]);
 		send1BitWord(_parityBit);
 		if (!handleAcknowledge()){
@@ -457,9 +448,9 @@ byte AVCLanDrv::_sendMessage (void){
 
 // sends the message in global registers on the AVC LAN bus, log message through serial port
 // return 0 if successful else error code
-byte AVCLanDrv::sendMessage (void){
-	byte sc = MAXSENDATTEMP;
-	byte res;
+uint8_t AVCLanDrv::sendMessage (void){
+	uint8_t sc = MAXSENDATTEMP;
+	uint8_t res;
 	do{
 		res = avclan._sendMessage();
 		if (!res){
@@ -477,7 +468,7 @@ byte AVCLanDrv::sendMessage (void){
 
 // sends the message for given mesage ID on the AVC LAN bus, log message through serial port
 // return 0 if successful else error code
-byte AVCLanDrv::sendMessage (AvcOutMessage *msg){
+uint8_t AVCLanDrv::sendMessage (const AvcOutMessage *msg){
 	loadMessage(msg);
 	return sendMessage();
 }
@@ -501,8 +492,9 @@ void AVCLanDrv::printMessage(bool incoming){
 	bSerial.printHex8(slaveAddress);
 	bSerial.print(" ");
 	bSerial.printHex8(dataSize);
+	bSerial.print(" ");
 
-	for (byte i = 0; i < dataSize; i++){
+	for (uint8_t i = 0; i < dataSize; i++){
 		bSerial.printHex8(message[i]);
 	}
 	bSerial.println(); 
@@ -510,15 +502,15 @@ void AVCLanDrv::printMessage(bool incoming){
 }
 
 // Use the last received message to determine the corresponding action ID
-byte AVCLanDrv::getActionID(AvcInMessageTable messageTable[], byte mtSize){
+uint8_t AVCLanDrv::getActionID(const AvcInMessageTable messageTable[], uint8_t mtSize){
 	if (slaveAddress != deviceAddress && slaveAddress != 0x0FFF) return ACT_NONE;
-	for (byte msg = 0; msg < mtSize; msg++){
+	for (uint8_t msg = 0; msg < mtSize; msg++){
 		bool found = true;
 		
 		if (dataSize != pgm_read_byte_near(&messageTable[msg].dataSize)){
 			continue;
 		}
-		for (byte i = 0; i < dataSize; i++){
+		for (uint8_t i = 0; i < dataSize; i++){
 			if (message[i] != pgm_read_byte_near(&messageTable[msg].data[i])){
 				found = false;
 				break;
@@ -534,16 +526,16 @@ byte AVCLanDrv::getActionID(AvcInMessageTable messageTable[], byte mtSize){
 }
 
 // Use the last received message to determine the corresponding action ID, use masked message table
-byte AVCLanDrv::getActionID(AvcInMaskedMessageTable messageTable[], byte mtSize){
+uint8_t AVCLanDrv::getActionID(const AvcInMaskedMessageTable messageTable[], uint8_t mtSize){
 	if (slaveAddress != deviceAddress && slaveAddress != 0x0FFF) return ACT_NONE;
-	for (byte msg = 0; msg < mtSize; msg++){
+	for (uint8_t msg = 0; msg < mtSize; msg++){
 		bool found = true;
 		
 		if (dataSize != pgm_read_byte_near(&messageTable[msg].dataSize)){
 			continue;
 		}
-		word mask = pgm_read_byte_near(&messageTable[msg].mask);
-		for (byte i = 0; i < dataSize; i++){
+		uint16_t mask = pgm_read_byte_near(&messageTable[msg].mask);
+		for (uint8_t i = 0; i < dataSize; i++){
 			if (mask & _BV(i)) continue;
 			if (message[i] != pgm_read_byte_near(&messageTable[msg].data[i])){
 				found = false;
@@ -560,7 +552,7 @@ byte AVCLanDrv::getActionID(AvcInMaskedMessageTable messageTable[], byte mtSize)
 }
 
 // Loads message data for given mesage ID.
-void AVCLanDrv::loadMessage(AvcOutMessage *msg){
+void AVCLanDrv::loadMessage(const AvcOutMessage *msg){
 	broadcast = pgm_read_byte_near(&msg->broadcast);
 	masterAddress = deviceAddress;
 
@@ -571,7 +563,7 @@ void AVCLanDrv::loadMessage(AvcOutMessage *msg){
 
 	dataSize = pgm_read_byte_near( &msg->dataSize ); 
 
-	for (byte i = 0; i < dataSize; i++ ){
+	for (uint8_t i = 0; i < dataSize; i++ ){
 		message[i] = pgm_read_byte_near( &msg->data[i] );
 	}
 };

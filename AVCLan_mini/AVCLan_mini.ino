@@ -7,10 +7,10 @@
 #define AVCLAN_VERSION "0.1.7"
 
 #include <EEPROM.h>
-#include <AVCLanDrv.h>
-#include <AVCLanCDch.h>
-#include <BuffSerial.h>
-#include <config.h>
+#include "src/AVCLanDrv/AVCLanDrv.h"
+#include "src/AVCLanCDch/AVCLanCDch.h"
+#include "src/BuffSerial/BuffSerial.h"
+#include "src/AVCLanDrv/config.h"
 
 byte readSeq = 0;
 byte s_len	= 0;
@@ -33,7 +33,7 @@ void setup(){
 	sbi(LED_DDR,  LED_OUT);
 	cbi(LED_PORT, LED_OUT);
 
-	bSerial.begin(250000);
+	bSerial.begin(57600);
 	avclan.begin();
 	avclanDevice.begin();
 	EERPOM_read_config();
@@ -52,7 +52,9 @@ void loop(){
 			if (!avclan.readonly) avclanDevice.getActionID();
 			if (avclan.actionID != ACT_NONE) {
 				avclanDevice.processAction((AvcActionID)avclan.actionID);
-			}
+			} else {
+                avclan.printMessage(true);
+            }
 		}
 	}
 
@@ -186,14 +188,14 @@ void loop(){
 void sendMess(){
 	avclan.broadcast = AVC_MSG_DIRECT;
 	avclan.masterAddress = 0x0360;
-	avclan.slaveAddress  = 0x0140;
+	avclan.slaveAddress  = 0x0160;
 	avclan.dataSize      = 0x05;
 	avclan.message[0]    = 0x00;
 	avclan.message[1]    = 0x01;
 	avclan.message[2]    = 0x12;
-	avclan.message[2]    = 0x10;
-	avclan.message[3]    = 0x63;
-	byte res = avclan.sendMessage();
+	avclan.message[3]    = 0x10;
+	avclan.message[4]    = 0x63;
+	avclan.sendMessage();
 }
 
 // Чтение конфигурации из EEPROM
