@@ -4,18 +4,18 @@
   Version 0.1.1
 */
 
-#include "AVCLanDrv.h"
+#include "../AVCLanDrv/AVCLanDrv.h"
 #include "AVCLanNavi.h"
 #include <avr/pgmspace.h>
 
-AvcInMessageTable  mtMain[] PROGMEM = {
+const AvcInMessageTable  mtMain[] PROGMEM = {
     {ACT_REGISTER,     0x03, {0x12, 0x01, 0x00}},
     {ACT_INIT,         0x03, {0x12, 0x01, 0x01}},
 };
 
 const byte mtMainSize = sizeof(mtMain) / sizeof(AvcInMessageTable);
 
-AvcInMessageTable  mtSearchHead[] PROGMEM = {
+const AvcInMessageTable  mtSearchHead[] PROGMEM = {
     {ACT_REGISTER,  0x03, {0x12, 0x01, 0x00}},           // AVC LAN register
     {ACT_REGISTER,  0x03, {0x12, 0x01, 0x01}},           // AVC LAN init
     {ACT_REGISTER,  0x03, {0x01, 0x01, 0x58}},
@@ -24,9 +24,9 @@ AvcInMessageTable  mtSearchHead[] PROGMEM = {
 };
 const byte mtSearchHeadSize = sizeof(mtSearchHead) / sizeof(AvcInMessageTable);
 
-AvcOutMessage CmdReset       PROGMEM =  {AVC_MSG_BROADCAST,  0x05, {0x00, 0x00, 0x00, 0x00, 0x00}}; // reset AVCLan. This causes HU to send ACT_REGISTER
-AvcOutMessage CmdRegister    PROGMEM =  {AVC_MSG_DIRECT,     0x0D, {0x00, 0x01, 0x12, 0x10, 0x58, 0x24, 0x5A, 0x85, 0x59, 0x6D, 0x57, 0x68, 0xAE}}; // register navi
-AvcOutMessage CmdInit        PROGMEM =  {AVC_MSG_BROADCAST,  0x09, {0x6D, 0x31, 0xF1, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00}}; // init command 
+const AvcOutMessage CmdReset       PROGMEM =  {AVC_MSG_BROADCAST,  0x05, {0x00, 0x00, 0x00, 0x00, 0x00}}; // reset AVCLan. This causes HU to send ACT_REGISTER
+const AvcOutMessage CmdRegister    PROGMEM =  {AVC_MSG_DIRECT,     0x0D, {0x00, 0x01, 0x12, 0x10, 0x58, 0x24, 0x5A, 0x85, 0x59, 0x6D, 0x57, 0x68, 0xAE}}; // register navi
+const AvcOutMessage CmdInit        PROGMEM =  {AVC_MSG_BROADCAST,  0x09, {0x6D, 0x31, 0xF1, 0x00, 0x00, 0x00, 0x04, 0x00, 0x00}}; // init command 
 
 // AVCLan Navi init, 
 void AVCLanNavi::begin(){

@@ -7,15 +7,16 @@
 #ifndef AVCLanNavi_h
 #define AVCLanNavi_h
 
+#include <Arduino.h>
 #include <avr/pgmspace.h>
-#include "AVCLanDrv.h"
-#include "WProgram.h"
+#include "../AVCLanDrv/AVCLanDrv.h"
+//#include "WProgram.h"
 
 #define AVCLANDEVICE_NAME    " Navi"
 #define AVCLANDEVICE_VERSION "0.0.1"
 
-extern AvcOutMessage CmdReset; // reset AVCLan. This causes HU to send ACT_REGISTER
-extern AvcOutMessage CmdRegister; // register CD changer
+const extern AvcOutMessage CmdReset; // reset AVCLan. This causes HU to send ACT_REGISTER
+const extern AvcOutMessage CmdRegister; // register CD changer
 // extern AvcOutMessage *CmdTest; // test message
 
 
