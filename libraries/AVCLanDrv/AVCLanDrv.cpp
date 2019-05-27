@@ -202,7 +202,7 @@ uint8_t AVCLanDrv::_readMessage (){
 uint8_t AVCLanDrv::readMessage (){
 	uint8_t res = avclan._readMessage();
 	if (!res){
-//		avclan.printMessage(true);
+		avclan.printMessage(true);
 	}else{
 		bSerial.print("R");
 		bSerial.printHex4(res);
@@ -448,13 +448,15 @@ uint8_t AVCLanDrv::_sendMessage (void){
 
 // sends the message in global registers on the AVC LAN bus, log message through serial port
 // return 0 if successful else error code
-uint8_t AVCLanDrv::sendMessage (void){
+uint8_t AVCLanDrv::sendMessage (bool print){
 	uint8_t sc = MAXSENDATTEMP;
 	uint8_t res;
 	do{
 		res = avclan._sendMessage();
 		if (!res){
-			avclan.printMessage(false);
+            if (print) {
+                avclan.printMessage(false);
+            }
 		}else{
 			bSerial.print("W");
 			bSerial.printHex4(res);
@@ -468,9 +470,9 @@ uint8_t AVCLanDrv::sendMessage (void){
 
 // sends the message for given mesage ID on the AVC LAN bus, log message through serial port
 // return 0 if successful else error code
-uint8_t AVCLanDrv::sendMessage (const AvcOutMessage *msg){
+uint8_t AVCLanDrv::sendMessage (const AvcOutMessage *msg, bool print){
 	loadMessage(msg);
-	return sendMessage();
+	return sendMessage(print);
 }
 // print message to serial port
 void AVCLanDrv::printMessage(bool incoming){
@@ -535,8 +537,12 @@ uint8_t AVCLanDrv::getActionID(const AvcInMaskedMessageTable messageTable[], uin
 			continue;
 		}
 		uint16_t mask = pgm_read_byte_near(&messageTable[msg].mask);
-		for (uint8_t i = 0; i < dataSize; i++){
+		for (uint8_t i = 0; i < dataSize && i < sizeof(&messageTable[msg].data); i++){
 			if (mask & _BV(i)) continue;
+            if (msg == 0x07) {
+                bSerial.print("testing byte "); bSerial.printDec(i); bSerial.println();
+
+            }
 			if (message[i] != pgm_read_byte_near(&messageTable[msg].data[i])){
 				found = false;
 				break;

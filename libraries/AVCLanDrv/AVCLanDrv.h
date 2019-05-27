@@ -106,8 +106,8 @@ class AVCLanDrv{
 		bool	readonly;
 		void	begin ();
 		uint8_t	readMessage (void);
-		uint8_t	sendMessage (void);
-		uint8_t	sendMessage (const AvcOutMessage*);
+		uint8_t	sendMessage (bool print = true);
+		uint8_t	sendMessage (const AvcOutMessage*, bool print = true);
 		void 	printMessage (bool incoming);
 		bool	isAvcBusFree (void);
 		uint8_t	getActionID (const AvcInMessageTable messageTable[], uint8_t mtSize);

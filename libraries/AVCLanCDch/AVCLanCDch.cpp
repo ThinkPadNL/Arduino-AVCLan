@@ -31,6 +31,8 @@ const AvcInMessageTable  mtMain[] PROGMEM = {
 	{ACT_RANDOM_OFF,     0x04, {0x00, 0x25, 0x43, 0xB1}},
 	{ACT_RANDOM_D_ON,    0x04, {0x00, 0x25, 0x43, 0xB3}},
 	{ACT_RANDOM_D_OFF,   0x04, {0x00, 0x25, 0x43, 0xB4}},
+    {ACT_EJECT_CD,       0x04, {0x62, 0x31, 0x9F, 0x07}},
+    {ACT_NOTIFY_NO_CD,   0x04, {0x62, 0x31, 0x9F, 0x00}},
 	// power off 0401015F01
 };
 const uint8_t mtMainSize = sizeof(mtMain) / sizeof(AvcInMessageTable);
@@ -43,6 +45,7 @@ const AvcInMaskedMessageTable  mtMaskedMain[] PROGMEM = {
 	{ACT_PLAY_REQ2,    0x06, {0x00, 0x12, 0x43, 0x42, 0, 0x00}, _BV(4)},
 	{ACT_STOP_REQ1,     0x05, {0x00, 0x12, 0x43, 0x43, 0}, _BV(4)},
 	{ACT_STOP_REQ2,     0x06, {0x00, 0x12, 0x43, 0x43, 0, 0x00}, _BV(4)},
+    {ACT_VOLUME_STATUS,  0x13, {0x74, 0x31, 0xF1, 0x90, 0, 0, 0, 0, 0, 0, 0, 0x0F, 0x00, 0x00/*, 0x03, 0x08, 0x00, 0x00, 0x00*/ }, _BV(4) | _BV(5) | _BV(6) | _BV(7) | _BV(8)| _BV(9) | _BV(10)},
 };
 const uint8_t mtMaskedMainSize = sizeof(mtMaskedMain) / sizeof(AvcInMaskedMessageTable);
 
@@ -108,6 +111,13 @@ void AVCLanCDch::getActionID(){
 void AVCLanCDch::processAction(AvcActionID ActionID){
 	uint8_t r;
 	switch (ActionID){
+        case ACT_VOLUME_STATUS:
+            bSerial.println("do ACT_VOLUME_STATUS");
+            break;
+        case ACT_EJECT_CD:
+        case ACT_NOTIFY_NO_CD:
+            bSerial.println("do ACT_EJECT_CD/ACT_NOTIFY_NO_CD -> register");
+            // fallthrough
 		case ACT_REGISTER:                                 // register device
             bSerial.println("do ACT_REGISTER");
 			if (avclan.headAddress == 0) avclan.headAddress = avclan.masterAddress;
@@ -157,7 +167,7 @@ void AVCLanCDch::processAction(AvcActionID ActionID){
 				avclan.message[6] = 1;       // cd track
 				avclan.message[7] = cd_min;  // play tme min
 				avclan.message[8] = cd_sec;  // play time sec
-				r = avclan.sendMessage();
+				r = avclan.sendMessage(false);
 			}
 			if (!r && cd_status != stPlay) avclan.sendMessage(&CmdPlayOk5);
 			ENABLE_TIMER1_INT;
@@ -205,7 +215,7 @@ void AVCLanCDch::processAction(AvcActionID ActionID){
 			r = avclan.message[3];
 			avclan.loadMessage(&CmdLanCheckOk);
 			avclan.message[4] = r;
-			avclan.sendMessage();
+			avclan.sendMessage(false);
 			break;
 		case ACT_SCAN_ON:                                  // Scan mode on
             bSerial.println("do ACT_SCAN_ON");

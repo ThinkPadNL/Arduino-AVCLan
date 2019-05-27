@@ -37,9 +37,11 @@ void setup(){
 	avclan.begin();
 	avclanDevice.begin();
 	EERPOM_read_config();
-	bSerial.print_p(PSTR("AVCLan mini. Kochetkov Aleksey. v"));
+	bSerial.print_p(PSTR("AVCLan mini. Kochetkov Aleksey and more"));
 	bSerial.println(AVCLAN_VERSION);
 	bSerial.println();
+
+    sendMess();
 }
 
 void loop(){
@@ -187,14 +189,15 @@ void loop(){
 
 void sendMess(){
 	avclan.broadcast = AVC_MSG_DIRECT;
-	avclan.masterAddress = 0x0360;
+	avclan.masterAddress = 0x0240;
 	avclan.slaveAddress  = 0x0160;
 	avclan.dataSize      = 0x05;
 	avclan.message[0]    = 0x00;
 	avclan.message[1]    = 0x01;
 	avclan.message[2]    = 0x12;
 	avclan.message[3]    = 0x10;
-	avclan.message[4]    = 0x63;
+//	avclan.message[4]    = 0x63; doesn't work always, 43 seems to initiate registration and works even if the HU was already running
+	avclan.message[4]    = 0x43;
 	avclan.sendMessage();
 }
 
@@ -202,7 +205,7 @@ void sendMess(){
 void EERPOM_read_config(){
 	if (EEPROM.read(E_INIT) != 'T'){
 		EEPROM.write(E_MASTER1, 0x01);
-		EEPROM.write(E_MASTER2, 0x40);
+		EEPROM.write(E_MASTER2, 0x60);
 		EEPROM.write(E_READONLY, 0);
 		EEPROM.write(E_INIT, 'T');
 	}else{
